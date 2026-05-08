@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>T850 — Compteur VAD</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}"/>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-ring"></div>
+    <div class="splash-wordmark">T850</div>
+    <div class="splash-tagline">Compteur VAD</div>
+    <div class="splash-divider"></div>
+    <div class="splash-brand">KINOVA</div>
+    <div class="splash-author">By Luka Augustin</div>
+    <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span class="logo-wordmark" id="logoClickZone">T850</span>
+        <span class="logo-sub">VAD</span>
+      </div>
+      <div class="save-indicator" id="saveIndicator">
+        <span class="save-dot" id="saveDot"></span>
+        <span class="save-label" id="saveLabel">Sauvegardé</span>
+      </div>
+    </div>
+
+    <div class="sidebar-kpi">
+      <div class="kpi-box kpi-accent">
+        <div class="kpi-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-value" id="kpiTotal">0</div>
+          <div class="kpi-label">VENTES</div>
+          <div class="goal-bar-wrap" id="goalBarWrap" style="display:none">
+            <div class="goal-bar-fill" id="goalBarFill"></div>
+            <span class="goal-bar-label" id="goalBarLabel"></span>
+          </div>
+        </div>
+        <button class="kpi-btn" id="goalSetBtn" title="Objectif">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-value" id="kpiRebonds">0</div>
+          <div class="kpi-label">REBONDS</div>
+        </div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-value" id="kpiConv">—</div>
+          <div class="kpi-label">CONVERSION</div>
+        </div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-value" id="kpiMulti">—</div>
+          <div class="kpi-label">MULTI VAD</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-box kpi-amber" id="sgAgendaBox">
+      <div class="kpi-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="kpi-info">
+        <div class="kpi-value" id="kpiAgenda">0</div>
+        <div class="kpi-label">SG AGENDA</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <button id="agendaPlus" class="adj-btn adj-plus">+</button>
+        <button id="agendaMinus" class="adj-btn adj-minus">−</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Client actuel</div>
+    <div class="client-card">
+      <div class="client-avatar" id="clientAvatar">?</div>
+      <div class="client-info">
+        <div class="client-name" id="clientName">Aucun client</div>
+        <div class="client-dob" id="clientDob">—</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Session</div>
+    <div class="session-block">
+      <div class="session-row">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="sessionTimer">00:00:00</span>
+        <span class="session-meta">durée</span>
+      </div>
+      <div class="session-row">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <span id="sessionRate">—</span>
+        <span class="session-meta">v/heure</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Par catégorie</div>
+    <div class="cat-stat-list" id="catStatList"></div>
+
+    <div class="sidebar-footer">
+      <span>By. Luka Augustin</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="icon-btn" id="themeToggle" title="Thème">
+          <svg id="iconSun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg id="iconMoon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="btn-help-t850" id="helpBtnSidebar" title="Note de Luka">?</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button class="btn btn-primary" id="addBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Vente <kbd class="kbdtip">V</kbd>
+      </button>
+      <button class="btn btn-secondary" id="rebondBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        Rebond <kbd class="kbdtip">R</kbd>
+      </button>
+      <button class="btn btn-ghost btn-sm" id="undoBtn" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        Annuler
+      </button>
+      <div class="topbar-sep"></div>
+      <button class="btn btn-secondary" id="clientBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Client <kbd class="kbdtip">C</kbd>
+      </button>
+      <button class="btn btn-secondary" id="catalogBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Catalogue
+      </button>
+      <div class="topbar-sep"></div>
+      <button class="btn btn-secondary" id="pdfBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF
+      </button>
+      <button class="btn btn-secondary" id="pdfWeekBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Semaine
+      </button>
+      <button class="btn btn-secondary" id="csvBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+        CSV
+      </button>
+      <div class="spacer"></div>
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Filtrer…" autocomplete="off"/>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="resetBtn" style="color:var(--danger)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        Reset
+      </button>
+      <button class="btn btn-ghost btn-sm" id="helpBtn" title="Raccourcis (?)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+
+    <div class="content">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <span class="panel-title">Historique ventes</span>
+            <span class="panel-badge" id="historyBadge">0</span>
+            <span class="panel-badge panel-badge-accent" id="filteredBadge" style="display:none"></span>
+          </div>
+          <div class="scroll" id="salesList"><div class="sale-empty">Aucune vente pour l'instant.</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="6" height="18"/><rect x="9" y="8" width="6" height="13"/><rect x="16" y="13" width="6" height="8"/></svg></div>
+            <span class="panel-title">Ventes / Rebonds par produit</span>
+          </div>
+          <div class="scroll">
+            <table class="data-table">
+              <thead><tr><th>Produit</th><th>V</th><th>R</th><th>Conv.</th></tr></thead>
+              <tbody id="prodTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <span class="panel-title">Tranches horaires</span>
+          </div>
+          <div id="timeStatsList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><line x1="2" y1="12" x2="22" y2="12"/></svg></div>
+            <span class="panel-title">Catégories détaillées</span>
+          </div>
+          <div class="scroll" id="catDetailList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="saleModal">
+  <div class="modal-card">
+    <div class="modal-title">Ajouter une vente</div>
+    <div class="modal-sub">Sélectionne la catégorie puis le produit.</div>
+    <div class="field"><label>Catégorie</label><select id="categorySelect"><option value="">— Catégorie —</option></select></div>
+    <div class="field"><label>Produit</label><select id="productSelect" disabled><option value="">— Produit —</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelSale">Annuler</button>
+      <button class="btn btn-primary" id="confirmSale">Valider la vente</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="rebondModal">
+  <div class="modal-card">
+    <div class="modal-title">Ajouter un rebond</div>
+    <div class="modal-sub">Sans client associé.</div>
+    <div class="field"><label>Catégorie</label><select id="rebondCategorySelect"><option value="">— Catégorie —</option></select></div>
+    <div class="field"><label>Produit</label><select id="rebondProductSelect" disabled><option value="">— Produit —</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelRebond">Annuler</button>
+      <button class="btn btn-primary" id="confirmRebond">Valider le rebond</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="saleEditModal">
+  <div class="modal-card">
+    <div class="modal-title">Modifier la vente</div>
+    <div class="modal-sub" id="saleEditInfo"></div>
+    <div class="field"><label>Catégorie</label><select id="editCategorySelect"></select></div>
+    <div class="field"><label>Produit</label><select id="editProductSelect"></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger-ghost btn-sm" id="deleteSaleBtn">Supprimer</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" id="cancelSaleEdit">Annuler</button>
+      <button class="btn btn-primary" id="saveSaleEdit">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clientModal">
+  <div class="modal-card">
+    <div class="modal-title">Infos client</div>
+    <div class="modal-sub">Associé aux ventes de la session.</div>
+    <div class="field"><label>Nom</label><input id="nomInput" placeholder="DUPONT"/></div>
+    <div class="field"><label>Prénom</label><input id="prenomInput" placeholder="Jean"/></div>
+    <div class="field"><label>Date de naissance</label><input id="naissanceInput" type="date"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelClient">Annuler</button>
+      <button class="btn btn-primary" id="saveClient">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="catalogModal">
+  <div class="modal-card" style="max-width:540px">
+    <div class="modal-title">Gérer les produits</div>
+    <div class="modal-sub">Ajout, modification, suppression par catégorie.</div>
+    <div class="field"><label>Catégorie</label><select id="catalogCategorySelect"></select></div>
+    <div class="field"><label>Ajouter un produit</label>
+      <div style="display:flex;gap:8px">
+        <input id="newProductInput" placeholder="Nouveau produit…" style="flex:1"/>
+        <button class="btn btn-primary btn-sm" id="addProductBtn">Ajouter</button>
+      </div>
+    </div>
+    <div class="scroll" style="max-height:260px;margin-top:4px" id="catalogProductsList"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn btn-ghost" id="closeCatalog">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="goalModal">
+  <div class="modal-card" style="max-width:340px">
+    <div class="modal-title">Objectif journalier</div>
+    <div class="modal-sub">Nombre de ventes cibles pour la session.</div>
+    <div class="field"><label>Objectif</label><input id="goalInput" type="number" min="1" max="200" placeholder="ex: 10"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelGoal">Annuler</button>
+      <button class="btn btn-danger-ghost btn-sm" id="clearGoal">Effacer</button>
+      <button class="btn btn-primary" id="saveGoal">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-card" style="max-width:380px">
+    <div class="modal-title">Réinitialiser ?</div>
+    <div class="modal-sub">Ventes + rebonds + client effacés. Catalogue conservé.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelReset">Annuler</button>
+      <button class="btn btn-primary" id="confirmReset" style="background:var(--danger);box-shadow:none">Réinitialiser</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="shortcutsModal">
+  <div class="modal-card" style="max-width:400px">
+    <div class="modal-title">Raccourcis clavier</div>
+    <div class="modal-sub">Accélère ton workflow.</div>
+    <div class="shortcuts-grid">
+      <div class="sc-row"><kbd>V</kbd><span>Ajouter une vente</span></div>
+      <div class="sc-row"><kbd>R</kbd><span>Ajouter un rebond</span></div>
+      <div class="sc-row"><kbd>C</kbd><span>Infos client</span></div>
+      <div class="sc-row"><kbd>Ctrl+Z</kbd><span>Annuler la dernière action</span></div>
+      <div class="sc-row"><kbd>Ctrl+P</kbd><span>Exporter PDF global</span></div>
+      <div class="sc-row"><kbd>Esc</kbd><span>Fermer le modal actif</span></div>
+      <div class="sc-row"><kbd>?</kbd><span>Afficher cette aide</span></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="closeShortcuts">Fermer</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="noteModal">
+  <div class="modal-card" style="max-width:600px">
+    <div class="modal-title">Note de Luka</div>
+    <div class="note-body" id="noteText"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="closeNote">Fermer</button></div>
+  </div>
+</div>
+
+<canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:9999"></canvas>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
