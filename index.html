@@ -4,9 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>T850 — Compteur VAD</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Polices système uniquement (app offline packagée en .exe) -->
 
 <style>
 /* ============================================================
@@ -77,7 +75,7 @@
 html { font-size: 15px; }
 
 body {
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Geist', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-feature-settings: "cv11","ss01","ss03","cv09";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -1477,7 +1475,10 @@ function dtNow(){const d=new Date();const iso=d.toISOString();const display=`${p
 
 let saveTimer;
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{
-  try{await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state})});}catch(e){}
+  try{
+    const res=await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  }catch(e){console.warn('[T850] Échec sauvegarde auto :',e);}
 },400);}
 
 function showToast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
@@ -1513,7 +1514,7 @@ function render(){
   const multi=Object.values(byClient).filter(c=>c>=2).length;
   $('kpiMulti').textContent=multi||'—';
 
-  $('kpiAgenda').textContent=(state.catalogOverrides&&state.catalogOverrides.__sgAgenda)||0;
+  $('kpiAgenda').textContent=state.sgAgenda||0;
 
   // Client
   if(state.currentClient){const c=state.currentClient;const ini=((c.prenom||' ')[0]+(c.nom||' ')[0]).toUpperCase().trim();$('clientAvatar').textContent=ini||'C';$('clientName').textContent=`${c.prenom||''} ${c.nom||''}`.trim()||'—';$('clientDob').textContent=c.naissance||'—';}
@@ -1658,8 +1659,14 @@ $('addProductBtn').addEventListener('click',()=>{
   $('newProductInput').value=''; scheduleSave();renderCatalogProducts();render();showToast('Produit ajouté ✅');
 });
 
-function getSGA(){return((state.catalogOverrides=state.catalogOverrides||{}).__sgAgenda||0);}
-function setSGA(n){(state.catalogOverrides=state.catalogOverrides||{}).__sgAgenda=n;scheduleSave();render();}
+function getSGA(){
+  // Migration : sgAgenda était parfois dans catalogOverrides.__sgAgenda
+  if(!state.sgAgenda&&(state.catalogOverrides||{}).__sgAgenda){
+    state.sgAgenda=parseInt(state.catalogOverrides.__sgAgenda)||0;
+  }
+  return state.sgAgenda||0;
+}
+function setSGA(n){state.sgAgenda=Math.max(0,parseInt(n)||0);scheduleSave();render();}
 $('agendaPlus').addEventListener('click',e=>{e.stopPropagation();setSGA(getSGA()+1);showToast('SG Agenda : '+getSGA());});
 $('agendaMinus').addEventListener('click',e=>{e.stopPropagation();if(getSGA()>0)setSGA(getSGA()-1);});
 $('kpiAgenda').addEventListener('dblclick',()=>{const v=prompt('SG Agenda :',getSGA());if(v===null)return;const n=parseInt(v);if(!isNaN(n)&&n>=0){setSGA(n);showToast('SG Agenda ✅');}});
@@ -1673,17 +1680,25 @@ $('confirmReset').addEventListener('click',async()=>{
   }catch(e){showToast('Erreur reset ❌');}
 });
 
-$('pdfBtn').addEventListener('click',async()=>{
-  try{const res=await fetch('/export_pdf',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({title:'RECAP VENTES',general:state.sales.length,sales:state.sales,rebonds:state.rebonds,sgAgenda:(state.catalogOverrides&&state.catalogOverrides.__sgAgenda)||0})});
-    const data=await res.json(); showToast(data.ok?'PDF exporté ✅':'Erreur PDF ❌');}catch(e){showToast('Erreur PDF ❌');}
+async function exportPdf(payload, btn){
+  if(btn.disabled) return;
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Génération…';
+  try{
+    const res=await fetch('/export_pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.ok) showToast('PDF exporté ✅');
+    else{ showToast('Erreur PDF ❌'); console.error('[T850] PDF error:',data.error); }
+  }catch(e){ showToast('Erreur PDF ❌'); console.error('[T850] PDF fetch error:',e); }
+  finally{ btn.disabled=false; btn.textContent=orig; }
+}
+
+$('pdfBtn').addEventListener('click',function(){
+  exportPdf({title:'RECAP VENTES',general:state.sales.length,sales:state.sales,rebonds:state.rebonds,sgAgenda:getSGA()},this);
 });
-$('pdfWeekBtn').addEventListener('click',async()=>{
+$('pdfWeekBtn').addEventListener('click',function(){
   const ws=weekSales(),wr=weekRebonds(); const{monday,sunday}=weekBounds();
   const rangeLabel=`${pad(monday.getDate())}/${pad(monday.getMonth()+1)}/${monday.getFullYear()} → ${pad(sunday.getDate())}/${pad(sunday.getMonth()+1)}/${sunday.getFullYear()}`;
-  try{const res=await fetch('/export_pdf',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({title:`RECAP SEMAINE (${rangeLabel})`,general:ws.length,sales:ws,rebonds:wr,sgAgenda:(state.catalogOverrides&&state.catalogOverrides.__sgAgenda)||0})});
-    const data=await res.json(); showToast(data.ok?'PDF semaine exporté ✅':'Erreur PDF ❌');}catch(e){showToast('Erreur PDF ❌');}
+  exportPdf({title:`RECAP SEMAINE (${rangeLabel})`,general:ws.length,sales:ws,rebonds:wr,sgAgenda:getSGA()},this);
 });
 
 $('helpBtn').addEventListener('click',()=>{$('noteText').textContent=NOTE_CONTENT;openModal('noteModal');});
